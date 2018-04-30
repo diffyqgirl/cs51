@@ -1,0 +1,37 @@
+tail recursive if the last thing you return is the fun
+
+returning f ( .... ) is tail recursive
+returning f (.... ) + x is not, because it has to remember a ton of different x's along the way
+
+fold and reduce are synonymous for the purposes of this course
+
+we should be able to write map and filter in terms of fold
+
+
+
+nasty shadowing example from section:
+
+let f g f' x = f' g x in
+let f = f (fun f -> 1 + f) in
+let f = f (fun f -> 42) in
+f 3
+
+don't do the outside first b/c it isn't obvious what the 3 arguments are
+
+let f g f' x = f' g x in
+let f = (fun f -> 1 + f) (fun f -> 42) in
+f 3
+
+let f g f' x = f' g x in
+(fun f -> 1 + f) (fun f -> 42 ) 3
+
+(fun f -> 42) (4)
+
+42
+
+when rewriting something in terms of fold, the initializer is the thing that is returned in the empty list case
+
+let uncurry f (x, y) = f x y
+let curry f x y = f (x,y)
+
+algebraic data types can be composed into other algebraic data types

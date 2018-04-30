@@ -1,0 +1,43 @@
+(*helper function for crawl*)
+(*takes in a words list, a link, and a dict with the existing index and returns an updated dict
+*containing the indexed words from that link*)
+let rec add_all_words (words: string list) (l: CS.link) (d:WordDict.dict): WordDict.dict =
+  match words with
+  | [] -> d
+  | h::t -> let single_l = PR.LinkSet.singleton l in
+      match WordDict.lookup d h with
+      | None -> add_all_words t l (WordDict.insert d h (single_l))
+      | Some h_lst ->  add_all_words t l (WordDict.insert d h (PR.LinkSet.union h_lst single_l))
+;;
+
+exception PageDoesNotExist;;
+
+let rec list_to_set (lst: CS.link list): PR.LinkSet.set =
+  match lst with
+  | [] -> PR.LinkSet.empty
+  | h::t -> PR.LinkSet.insert h (list_to_set t)
+;;
+
+let rec update_frontier (frontier: PR.LinkSet.set) (visited: PR.LinkSet.set) (new_links: CS.link list): PR.LinkSet.set =
+  match new_links with
+  | [] -> frontier
+  | h::t -> if PR.LinkSet.member visited h 
+    then update_frontier frontier visited t 
+    else update_frontier (PR.LinkSet.insert h frontier) visited t
+
+
+(*the frontier will initially contain just the initial link*)
+let rec crawl (n:int)
+    (frontier: PR.LinkSet.set)
+    (visited : PR.LinkSet.set)
+    (d:WordDict.dict) : WordDict.dict =
+    if n = 0 then d else
+      match PR.LinkSet.choose frontier with
+      | None -> d
+      | Some (a,b) -> match CS.get_page a with
+        | None -> crawl (n-1) frontier visited d (*print_string (CS.string_of_link a); raise PageDoesNotExist*)
+        | Some page_a -> crawl (n-1) 
+          (update_frontier b visited page_a.links)
+          (PR.LinkSet.union visited (PR.LinkSet.singleton a)) 
+          (add_all_words page_a.words a d)
+;;

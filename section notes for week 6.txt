@@ -1,0 +1,2 @@
+let rec streammax (s1 : int stream) (s2 : int stream) : int stream = 
+	fun () -> Cons (max s1 s2, streammax (tail s1) (tail s2)) ;;

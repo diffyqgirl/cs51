@@ -1,0 +1,17 @@
+forDictSet, type value = unit, because we're implementing a set with a dict but we only need the keys, not the values, so we want to make the value blank. 
+module D = Dict.Make (struct type key = .... [define all the stuff in dictarg] end)
+
+for timing
+use time_crawler and do_query from moogle.ml
+probaby best to put all the timing stuff in a separate file
+create whatever you want as long as you write some ocaml code
+code doesn't have to generate some report
+we don't actually care about efficiency in the end. it's okay if it's not a lot faster (though it will be if you use binary tree dictionary).
+
+check my version of dict to see if we have bstdict in module Make in dict.ml
+
+don't test code you didn't write, or that is trivially true
+
+Imperative  programming:
+let counter = ref 0 in ((fun x -> counter:=!counter+1; f x),counter)
+the fun x business is necessary to tell it thatit's a function that needs to be done every time, not just the first time.

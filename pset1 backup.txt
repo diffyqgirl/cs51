@@ -1,0 +1,419 @@
+(*** CS 51 Problem Set 1 ***)
+
+(* Problem 1 - Fill in types:
+ *
+ * Replace each ??? with the appropriate type of the corresponding expression.
+ * Be sure to remove the comments from each subproblem and to type check it
+ * before submission. *)
+
+(* For each of the expressions below, enter a string describing the 
+ * type of the expression in the expressions below. The first one is done 
+ * for you.
+ *)
+
+(*
+let prob0 : int = 42 ;;
+
+let prob1a : string = let greet y = "Hello " ^ y in greet "World!";;
+
+let prob1b : int option list = [Some 4; Some 2; None; Some 3];;
+
+let prob1c : (float option*float option)*bool = ((None, Some 42.0), true);;*)
+ 
+
+let prob0 =  "int";;
+
+let prob1a = "string";;
+
+let prob1b = "int option list";;
+
+let prob1c = "(float option * float option) * bool";;
+
+(* There are several values defined below that do not type check.
+
+  Explain in a comment above each corresponding value
+  why the following definitions will
+  not type check, and then provide a fixed version of each function
+  as an OCaml value (i.e. outside of a comment). *) 
+
+(*
+let prob1d : string * int list = [("CS", 51); ("CS", 50)];;
+*)
+(*
+	*This needs parenthesis to type check. Since OCaml parenthesizes from the right by default, it will think you meant string * (int list) and get confused.
+*)
+let prob1d : (string * int) list = [("CS", 51); ("CS"), 50];;
+  
+(*
+let prob1e : int =
+  let compare (x,y) = x < y in
+  if compare (4, 3.9) then 4 else 2;;
+*)
+(*
+	*compare has type 'a->'a->int. In the above function, compare is called with a float and an int as arguments. These are not the same type.  
+	*We should fix it by writing 4 as 4. to make it a float.
+*)
+
+let prob1e : int =
+	let compare (x,y) = x < y in
+	if compare (4., 3.9) then 4 else 2;;
+
+(*
+let prob1f : (string * string) list =
+  [("January", None); ("February", 1); ("March", None); ("April", None);
+   ("May", None); ("June", 1); ("July", None); ("August", None);
+   ("September", 3); ("October", 1); ("November", 2); ("December", 3)] ;;
+*)
+
+(*
+	*The type of prob1f should be (string * int option) list, since the second value in the tuple is always an int or None. 
+	*The ints in the list must be changed to int options.
+*)
+
+let prob1f : (string * int option) list =
+  [("January", None); ("February", Some 1); ("March", None); ("April", None);
+   ("May", None); ("June", Some 1); ("July", None); ("August", None);
+   ("September", Some 3); ("October", Some 1); ("November", Some 2); ("December", Some 3)] ;;
+
+
+(* Problem 2 - Write the following functions *)
+
+(* For each subproblem, you must implement a given function, providing
+ * appropriate unit tests in the accompanying file pset1_tests.ml. You
+ * are provided a high level description as well as a prototype (type signature)
+ * of the function you must implement. 
+ * Keep in mind the CS51 style guide 
+ * and what you've learned so far about efficiency and elegance. *)
+
+(* `reversed lst` should return true if the integers in lst are in
+ * decreasing order. The empty list is considered to be reversed. Consecutive
+ * elements can be equal in a reversed list. *)
+
+(* Here is its prototype/signature: *)
+
+(* Implement reversed below, and be sure to write tests for it (see 2b for
+ * examples of tests). *)
+
+(* Replace the line below with your own definition of `reversed` *)
+
+let rec reversed (lst : int list) : bool =  
+    match lst with
+    |[]->true
+    |[_]->true
+    |h1::h2::t -> if (h1>=h2) then reversed (h2::t) else false;;
+
+(* merge takes two integer lists, each sorted in increasing order,
+ and returns a single merged list in sorted order. For example:
+
+merge [1;3;5] [2;4;6];;
+- : int list = [1; 2; 3; 4; 5; 6]
+merge [1;3;5] [2;4;6;12];;
+- : int list = [1; 2; 3; 4; 5; 6; 12]
+merge [1;3;5;700;702] [2;4;6;12];;
+- : int list = [1; 2; 3; 4; 5; 6; 12; 700; 702]
+
+*)
+
+(* The type signature for merge is as follows: *)
+(* merge : int list -> int list -> int list *)
+
+(* Replace the line below with your own definition of `merge` *)
+let rec merge (a : int list) (b : int list) : int list = 
+    match a,b with
+    |[], [] -> []
+    |ha::ta, [] -> a
+    |[], hb::tb -> b
+    |ha::ta, hb::tb -> if ha <= hb then ha::(merge ta b) else hb::(merge a tb)
+;;
+
+
+(* unzip should be a function which, given a list of pairs, returns a
+ * pair of lists, the first of which contains each first element of
+ * each pair, and the second of which contains each second element.
+ * The returned lists should have the elements in the order in which
+ * they appeared in the input. So, for instance:
+
+unzip [(1,2);(3,4);(5,6)];;
+- : int list * int list = ([1;3;5],[2;4;6])
+
+*)
+
+
+(* The type signature for unzip is as follows: *)
+(* unzip : (int * int) list -> int list * int list) *)
+
+(*helper function for unzip*)
+let rec unzip_left (lst: (int*int) list) : int list=
+    match lst with
+    |[] -> []
+    |(h1,h2)::t -> (h1 :: unzip_left t)
+;;
+
+(*helper function for unzip*)
+let rec unzip_right(lst: (int*int) list) : int list=
+    match lst with
+    |[] -> []
+    |(h1,h2)::t -> (h2 :: unzip_right t)
+;;
+
+
+(* Replace the line below with your own definition of `unzip` *)
+let unzip (lst : (int*int) list) : ((int list) * (int list)) = 
+    ((unzip_left lst),(unzip_right lst))
+;;
+
+(*>* Problem 2d *>*)
+
+(* `variance lst` returns None if lst has fewer than 2 floats, and
+ * Some of the variance of the floats in lst otherwise.  Recall that
+ * the variance of a sequence of numbers is 1/(n-1) * sum (x_i-m)^2,
+ * where a^2 means a squared, and m is the arithmetic mean of the list
+ * (sum of list / length of list). For example:
+
+variance [1.0; 2.0; 3.0; 4.0; 5.0];;
+- : int option = Some 2.5
+variance [1.0];;
+- : int option = None
+
+ * Remember to use the floating point version of the arithmetic
+ * operators when operating on floats (+. *., etc). The "float"
+ * function can cast an int to a float. *)
+
+(* variance : float list -> float option *)
+
+(* Replace the line below with your own definition of `variance` *)
+
+(* helper function for variance, used to calculate n in the variance formula*)
+(*calculates the length of a list*)
+let rec length (lst: 'a list): int =
+    match lst with
+    |[] -> 0
+    |h::t -> 1 + length t
+;;
+
+(* helper function for variance, used in the calculation of m in the variance formula*)
+(* calculates the sum of a float list*)
+let rec float_list_sum (lst: float list): float =
+    match lst with
+    |[] -> 0.0
+    |h::t -> h +. float_list_sum t
+;;
+
+let list_mean (lst: float list): float =
+    float_list_sum lst /. (float (length lst))
+;;
+
+let rec variance_helper (lst: float list) (len: int) (mean: float): float option =
+    match lst with
+    |[] -> None
+    |[h] -> None
+    |h1::h2::t -> match variance_helper (h2::t) len mean with
+        |None -> Some ( ((1.0 /. (float(len-1))) *. (((h1 -. mean)**2.0) +. ((h2-. mean)**2.0))) )
+        |Some v -> Some ( ((1.0 /. (float(len-1))) *. ((h1 -. mean)**2.0)) +. v )
+;;
+
+let variance (lst: float list): float option =
+   variance_helper lst (length lst) (list_mean lst)
+;;
+
+
+
+
+(*>* Problem 2e *>*)
+
+(* few_divisors n m should return true if n has fewer than m divisors,
+ * (including 1 and n) and false otherwise. Note that this is *not* the
+ * same as n having fewer divisors than m:
+
+few_divisors 17 3;;
+- : bool = true
+few_divisors 4 3;;
+- : bool = false
+few_divisors 4 4;;
+- : bool = true
+
+ * Do not worry about negative integers at all. We will not test
+ * your code using negative values for n and m, and do not
+ * consider negative integers for divisors (e.g. don't worry about
+ * -2 being a divisor of 4) *)
+
+(* The type signature for few_divisors is: *)
+(* few_divisors : int -> int -> bool *)
+
+
+(* Helper function for few_divisors*)
+(*returns a list of all the divisors of n, checking every number counting down from n to 1 to see if it is a divisor of n*)
+let rec few_divisors_list (n: int) (count: int) (lst: int list): int list =
+    if (count = 0) then [] else
+        if (n mod count = 0) then count::few_divisors_list n (count-1) lst else 
+            few_divisors_list n (count-1) lst
+;;
+
+(* Replace the line below with your own definition of `few_divisors` *)
+(* uses the length function defined above as a helper function for a previous problem*)
+let few_divisors (n: int) (m: int): bool =
+    (length (few_divisors_list n n [])) < m
+;;
+
+
+
+
+(*>* Problem 2f *>*)
+
+(* `concat_list sep lst` returns one big string with all the string
+ * elements of lst concatenated together, but separated by the string
+ * sep. Here are some example tests:
+
+concat_list ", " ["Greg"; "Anna"; "David"];;
+- : string = "Greg, Anna, David"
+concat_list "..." ["Moo"; "Baaa"; "Quack"];;
+- : string = "Moo...Baaa...Quack"
+concat_list ", " [];;
+- : string = ""
+concat_list ", " ["Moo"];;
+- : string = "Moo"
+
+*)
+
+(* The type signature for concat_list is: *)
+(* concat_list : string -> string list -> string *)
+
+(* Replace the line below with your own definition of `concat_list` *)
+let rec concat_list (sep:string) (lst:string list) : string = 
+    match lst with
+    |[] -> ""
+    |[h]-> h
+    |h1::h2::t -> h1^sep^(concat_list sep (h2::t))
+;;
+
+
+(*>* Problem 2g *>*)
+
+(* One way to compress a list of characters is to use run-length encoding.
+ * The basic idea is that whenever we have repeated characters in a list
+ * such as ['a';'a';'a';'a';'a';'b';'b';'b';'c';'d';'d';'d';'d'] we can
+ * (sometimes) represent the same information more compactly as a list
+ * of pairs like [(5,'a');(3,'b');(1,'c');(4,'d')].  Here, the numbers
+ * represent how many times the character is repeated.  For example,
+ * the first character in the string is 'a' and it is repeated 5 times,
+ * followed by 3 occurrences of the character 'b', followed by one 'c',
+ * and finally 4 copies of 'd'.
+ *
+ * Write a function to_run_length that converts a list of characters into
+ * the run-length encoding, and then write a function from_run_length
+ * that converts back. Writing both functions will make it easier to
+ * test that you've gotten them right. *)
+
+(* The type signatures for to_run_length and from_run_length are: *)
+(* to_run_length : char list -> (int * char) list *)
+(* from_run_length : (int * char) list -> char list *)
+
+
+(* Replace the line below with your own definition of `to_run_length` *)
+let rec to_run_length (lst: char list): (int * char) list =
+    match lst with
+    |[]->[]
+    |h1::t1 -> match (to_run_length t1) with
+        | []->[(1,h1)]
+        |(h2_int, h2_char)::t2 -> if (h1=h2_char) then (h2_int+1, h2_char) :: t2 else (1,h1)::(h2_int, h2_char)::t2
+;;
+
+
+
+(* Replace the line below with your own definition of `from_run_length` *)
+let rec from_run_length (lst: (int*char) list): char list = 
+    match lst with
+    |[] -> []
+    |(h1,h2)::t -> if (h1=1) then h2::from_run_length t else h2::( from_run_length ((h1-1, h2)::t) )
+;;
+
+(*>* Problem 3 *>*)
+
+(* Challenge!
+
+ * permutations lst should return a list containing every
+ * permutation of lst. For example, one correct answer to
+ * permutations [1; 2; 3] is
+ * [[1; 2; 3]; [2; 1; 3]; [2; 3; 1]; [1; 3; 2]; [3; 1; 2]; [3; 2; 1]].
+
+ * It doesn't matter what order the permutations appear in the returned list.
+ * Note that if the input list is of length n then the answer should be of
+ * length n!.
+
+ * Hint:
+ * One way to do this is to write an auxiliary function,
+ * interleave : int -> int list -> int list list,
+ * that yields all interleavings of its first argument into its second:
+ * interleave 1 [2;3] = [ [1;2;3]; [2;1;3]; [2;3;1] ].
+ * You may also find occasion for the library functions
+ * List.map and List.concat. *)
+
+(* The type signature for permuations is: *)
+(* permutations : int list -> int list list *)
+
+(* Replace the line below with your own definition of `permutations` *)
+let permutations = (fun _ -> failwith "ImplementMe") ;;
+
+
+
+
+
+open Ps1 ;;
+
+
+
+
+(* sample tests *)
+
+(*problem 2a*)
+let () = assert ((reversed []) = true);;
+let () = assert ((reversed [-4]) = true);;
+let () = assert ((reversed [1;-4; 5]) = false);;
+let () = assert ((reversed [6;3;2]) = true);;
+let () = assert ((reversed [1;0;5]) = false);;
+
+(*problem 2b*)
+let () = assert ((merge [1;2;3] [4;5;6;7]) = [1;2;3;4;5;6;7]);;
+let () = assert ((merge [4;5;6;7] [1;2;3]) = [1;2;3;4;5;6;7]);;
+let () = assert ((merge [4;5;6;7] [1;2;3]) = [1;2;3;4;5;6;7]);;
+let () = assert ((merge [2;2;2;2] [1;2;3]) = [1;2;2;2;2;2;3]);;
+let () = assert ((merge [1;2] [1;2]) = [1;1;2;2]);;
+let () = assert ((merge [-1;2;3;100] [-1;5;1001]) = [-1;-1;2;3;5;100;1001]);;
+let () = assert ((merge [] []) = []);;
+let () = assert ((merge [1] []) = [1]);;
+let () = assert ((merge [] [-1]) = [-1]);;
+let () = assert ((merge [1] [-1]) = [-1;1]);;
+
+(*problem 2c*)
+let () = assert ((unzip []) = ([],[]));; (*is this actually what unzip [] is supposed to give?*)
+let () = assert ((unzip [(1,-3)]) = ([1],[-3]));;
+let () = assert ((unzip [(1,0);(0,1);(7,8)]) = ([1;0;7],[0;1;8]));;
+
+(*problem 2d*)
+let () = assert ((variance []) = None);;
+let () = assert ((variance [4.0]) = None);;
+let () = assert ((variance [1.0;2.0]) = Some 0.5);;
+let () = assert ((variance [1.0;2.0;3.0;4.0;5.0]) = Some 2.5);;
+
+(*problem 2e*)
+let () = assert ((few_divisors 17 3) = true);;
+let () = assert ((few_divisors 9 3) = false);;
+let () = assert ((few_divisors 12 8) = true);;
+let () = assert ((few_divisors 1 1) = false);;
+
+(*problem 2f*)
+let () = assert ((concat_list "and " ["lions ";"tigers ";"bears, oh my!"]) = "lions and tigers and bears, oh my!");;
+let () = assert ((concat_list "wow!" []) = "");;
+let () = assert ((concat_list "..." ["Laura"]) = "Laura");;
+
+(*problem 2g*)
+let () = assert ((to_run_length []) = []);;
+let () = assert ((to_run_length ['a']) = [1,'a']);;
+let () = assert ((to_run_length ['z';'z';'q']) = [(2,'z');(1,'q')]);;
+let () = assert ((to_run_length ['a';'b';'b';'b';'c';'a';'a']) = [(1,'a');(3,'b');(1,'c');(2,'a')]);;
+
+(*problem 2h*)
+let () = assert ((from_run_length []) = []);;
+let () = assert ((from_run_length [(1,'a')]) = ['a']);;
+let () = assert ((from_run_length [(1,'a');(1,'b')]) = ['a';'b']);;
+let () = assert ((from_run_length [(1,'a');(3,'b');(1,'c');(2,'a')]) = ['a';'b';'b';'b';'c';'a';'a']);;

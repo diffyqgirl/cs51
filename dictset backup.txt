@@ -1,0 +1,50 @@
+module DictSet(C : COMPARABLE) : (SET with type elt = C.t) =
+struct
+  module D = Dict.Make(struct
+      type key = C.t
+      type value = unit
+      
+      let compare a b = C.compare a b
+      let string_of_key k = C.string_of_t k
+      let string_of_value v = "()"
+      let gen_key  = C.gen 
+      let gen_key_random  = C.gen_random 
+      let gen_key_lt k  = C.gen_lt k 
+      let gen_key_gt k  = C.gen_gt k 
+      
+      let gen_key_between k1 k2 = C.gen_between k1 k2
+      let gen_value () = ()
+      let gen_pair () = (gen_key (), gen_value ())
+
+
+
+
+  type elt = D.key
+  type set = D.dict
+
+  let empty = D.empty
+  let is_empty d = (d = empty)
+  let insert (k:elt) (d: set) : set = D.insert d k ()
+  let singleton (k: elt) : set = D.insert empty k ()
+  let union (s1: set) (s2: set): set = D.foldl D.insert s1 s2
+
+  let rec intersect_helper s1 s2 acc =
+    match D.choose s1, D.choose s2 with
+      | None, _ -> acc
+      | _, None -> acc
+      | Some (s1_key, s1_value, s1_t), Some (_, _, _) -> 
+        if D.member s2 s1_key then union (singleton s1_key) (intersect_helper s1_t s2 acc)
+        else intersect_helper s1_t s2 acc
+
+  let intersect (s1: set) (s2: set): set = intersect_helper s1 s2 empty
+  let remove (e: elt) (s: set): set = D.remove s e
+  let member = D.member
+  let choose (s: set) = 
+    match D.choose s with
+    | None -> None
+    | Some (k, _, s1) -> Some (k, s1)
+  let fold f x s = D.foldl (fun y z _ -> f y z) x s
+
+
+  let string_of_elt s = D.string_of_key s
+  let string_of_set s = D.string_of_dict s
